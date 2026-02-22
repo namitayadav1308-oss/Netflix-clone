@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netflix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--red:#E50914;--dark:#141414}
+  body{background:var(--dark);color:#fff;font-family:'Montserrat','Helvetica Neue',Arial,sans-serif;overflow-x:hidden}
+
+  /* ── LIVE SERVER WARNING BANNER ── */
+  #ls-warning{
+    position:fixed;bottom:0;left:0;right:0;z-index:9999;
+    background:#E50914;color:#fff;text-align:center;
+    padding:14px 20px;font-size:.9rem;font-weight:700;
+    display:none;
+  }
+  #ls-warning a{color:#fff;text-decoration:underline;cursor:pointer}
+
+  /* ── NAV ── */
+  nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:16px 56px;background:linear-gradient(to bottom,rgba(0,0,0,.95),transparent);transition:background .3s}
+  nav.solid{background:#141414}
+  .logo{font-size:2rem;font-weight:900;color:var(--red);font-style:italic;font-family:Georgia,serif;cursor:pointer;letter-spacing:-1px}
+  .nav-links{display:flex;gap:20px;list-style:none}
+  .nav-links a{color:#ccc;text-decoration:none;font-size:.83rem;font-weight:600;transition:color .2s}
+  .nav-links a:hover{color:#fff}
+  .nav-right{display:flex;align-items:center;gap:14px}
+  .icon-btn{background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer}
+  .signin-btn{background:var(--red);color:#fff;border:none;padding:7px 20px;border-radius:3px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+  .signin-btn:hover{background:#f6121d}
+
+  /* ── HERO ── */
+  .hero{height:100vh;position:relative;display:flex;align-items:flex-end;padding-bottom:130px;overflow:hidden}
+  .hero-bg{position:absolute;inset:0;background:#000}
+  .hero-bg img{width:100%;height:100%;object-fit:cover;opacity:.55;display:block}
+  .hero-grad{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,.9) 30%,rgba(0,0,0,.4) 70%,transparent),linear-gradient(to top,rgba(0,0,0,.9) 0%,transparent 50%)}
+  .hero-content{position:relative;z-index:2;padding:0 56px;max-width:580px}
+  .badge{display:inline-flex;align-items:center;gap:8px;margin-bottom:14px}
+  .badge-r{background:var(--red);color:#fff;font-size:.7rem;font-weight:900;padding:3px 9px;letter-spacing:1.5px;border-radius:2px}
+  .badge-t{font-size:.8rem;color:#ddd;font-weight:600}
+  .hero h1{font-size:clamp(2.2rem,5vw,4rem);font-weight:900;line-height:1;margin-bottom:16px;text-shadow:0 2px 20px rgba(0,0,0,.9)}
+  .hero p{font-size:.97rem;color:#ddd;line-height:1.65;margin-bottom:26px;font-weight:500;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+  .hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .btn-play{display:flex;align-items:center;gap:8px;background:#fff;color:#000;border:none;padding:12px 32px;border-radius:5px;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .2s}
+  .btn-play:hover{background:rgba(255,255,255,.82)}
+  .btn-info{display:flex;align-items:center;gap:8px;background:rgba(109,109,110,.72);color:#fff;border:none;padding:12px 26px;border-radius:5px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+  .btn-info:hover{background:rgba(109,109,110,.5)}
+  .hero-meta{display:flex;align-items:center;gap:16px;font-size:.85rem;color:#ccc}
+  .rating-box{border:1.5px solid #ccc;padding:1px 8px;font-size:.75rem;font-weight:700}
+
+  /* ── SECTIONS ── */
+  .section{padding:0 56px 44px}
+  .section-title{font-size:1.3rem;font-weight:800;margin-bottom:14px;color:#e5e5e5;display:flex;align-items:center;gap:10px}
+  .see-all{font-size:.78rem;color:#54b9c5;font-weight:700;cursor:pointer;opacity:0;transition:opacity .3s}
+  .section:hover .see-all{opacity:1}
+
+  /* ── CARD ROW ── */
+  .row{display:flex;gap:6px;overflow-x:auto;scroll-behavior:smooth;padding-bottom:6px;scrollbar-width:none}
+  .row::-webkit-scrollbar{display:none}
+  .card{flex-shrink:0;width:220px;border-radius:4px;overflow:hidden;position:relative;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s;background:#1a1a1a}
+  .card:hover{transform:scale(1.1) translateY(-10px);box-shadow:0 24px 70px rgba(0,0,0,.95);z-index:20}
+  .card-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1e1e1e}
+  /* Fallback colored bar when image fails */
+  .card-img.err{aspect-ratio:16/9;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+  .card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.97),rgba(0,0,0,.3) 60%,transparent);opacity:0;transition:opacity .3s;display:flex;flex-direction:column;justify-content:flex-end;padding:12px}
+  .card:hover .card-overlay{opacity:1}
+  .card-actions{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+  .cb{width:30px;height:30px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.78rem;transition:background .2s;flex-shrink:0}
+  .cb:hover{background:rgba(255,255,255,.2)}
+  .cb.play{background:#fff;color:#000;border-color:#fff}
+  .cb.more{margin-left:auto;border-color:#aaa}
+  .card-name{font-weight:800;font-size:.82rem;margin-bottom:4px}
+  .card-info{display:flex;gap:8px;font-size:.7rem;color:#aaa}
+  .card-info .pct{color:#46d369;font-weight:800}
+  .card-genres{display:flex;gap:2px;flex-wrap:wrap;margin-top:4px}
+  .gdot{font-size:.64rem;color:#ccc}
+  .gdot:not(:last-child)::after{content:' · ';color:#555}
+
+  /* ── TOP 10 ── */
+  .t10row{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+  .t10row::-webkit-scrollbar{display:none}
+  .t10item{flex-shrink:0;display:flex;align-items:flex-end;cursor:pointer;transition:transform .3s;padding-left:10px}
+  .t10item:hover{transform:scale(1.06);z-index:5}
+  .t10num{font-size:9rem;font-weight:900;line-height:.85;color:transparent;-webkit-text-stroke:3px #444;flex-shrink:0;margin-right:-14px;z-index:1;font-family:'Montserrat',sans-serif}
+  .t10img{width:130px;height:195px;border-radius:4px;object-fit:cover;z-index:2;display:block;box-shadow:-8px 0 20px rgba(0,0,0,.8);background:#1e1e1e}
+
+  /* ── CONTINUE WATCHING ── */
+  .cwrow{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+  .cwrow::-webkit-scrollbar{display:none}
+  .cwcard{flex-shrink:0;width:280px;border-radius:4px;overflow:hidden;cursor:pointer;transition:transform .3s;background:#1a1a1a}
+  .cwcard:hover{transform:scale(1.04);z-index:5;box-shadow:0 16px 50px rgba(0,0,0,.9)}
+  .cwimg{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1e1e1e;position:relative}
+  .cwinfo{padding:10px 12px 12px}
+  .cwtitle{font-size:.83rem;font-weight:700;margin-bottom:3px}
+  .cwep{font-size:.72rem;color:#888;margin-bottom:8px}
+  .pbar{height:3px;background:#444;border-radius:99px}
+  .pfill{height:100%;background:var(--red);border-radius:99px}
+
+  /* Play overlay on continue watching */
+  .cwwrap{position:relative}
+  .cwplay-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:2.5rem}
+  .cwcard:hover .cwplay-overlay{opacity:1}
+
+  /* ── PROMO ── */
+  .promo{border-top:8px solid #222;border-bottom:8px solid #222;padding:64px 56px;display:flex;align-items:center;justify-content:space-between;gap:40px;background:#000}
+  .promo h2{font-size:clamp(1.6rem,2.8vw,2.4rem);font-weight:900;margin-bottom:14px}
+  .promo p{color:#ddd;font-size:1rem;line-height:1.6;max-width:460px}
+  .promo-icon{flex-shrink:0;width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--red),#b20710);display:flex;align-items:center;justify-content:center;font-size:3.5rem;box-shadow:0 0 40px rgba(229,9,20,.35)}
+
+  /* ── FOOTER ── */
+  footer{background:#000;padding:44px 56px;border-top:1px solid #1a1a1a}
+  .fphone{color:#888;margin-bottom:26px;font-size:.88rem}
+  .flinks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:28px}
+  .flinks a{color:#666;font-size:.77rem;text-decoration:none;transition:color .2s}
+  .flinks a:hover{text-decoration:underline;color:#aaa}
+  .flang{background:transparent;border:1px solid #555;color:#aaa;padding:6px 28px 6px 10px;border-radius:3px;cursor:pointer;margin-bottom:18px;font-size:.82rem;font-family:inherit}
+  .fcopy{color:#555;font-size:.73rem}
+
+  /* ── MODAL ── */
+  .mbg{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+  .mbg.open{display:flex;animation:fi .2s ease}
+  .mbox{background:#181818;border-radius:10px;width:100%;max-width:860px;max-height:90vh;overflow-y:auto;position:relative}
+  .mart{width:100%;height:340px;border-radius:10px 10px 0 0;overflow:hidden;position:relative;background:#000}
+  .mart img{width:100%;height:100%;object-fit:cover;display:block;opacity:.7}
+  .mart-grad{position:absolute;inset:0;background:linear-gradient(to top,#181818 5%,transparent 60%)}
+  .mart-btns{position:absolute;bottom:20px;left:24px;display:flex;gap:12px;z-index:2}
+  .mclose{position:absolute;top:14px;right:14px;background:#333;border:none;color:#fff;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background .2s;z-index:2}
+  .mclose:hover{background:#555}
+  .mbody{padding:4px 28px 32px}
+  .mtitle{font-size:1.8rem;font-weight:900;margin-bottom:10px}
+  .mmeta{display:flex;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  .mmatch{color:#46d369;font-weight:800;font-size:1rem}
+  .myear,.mdur{color:#ddd;font-size:.88rem}
+  .mhd{border:1px solid #aaa;padding:0 5px;font-size:.7rem;border-radius:2px}
+  .mdesc{color:#ccc;line-height:1.7;font-size:.9rem;margin-bottom:18px}
+  .mchips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{background:#2a2a2a;padding:5px 14px;border-radius:4px;font-size:.78rem;color:#ddd}
+
+  /* ── SIGN IN ── */
+  .sibg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:600;display:none;align-items:center;justify-content:center}
+  .sibg.open{display:flex;animation:fi .2s ease}
+  .sibox{background:rgba(0,0,0,.88);border-radius:6px;padding:54px 64px;width:100%;max-width:450px;border:1px solid #333;position:relative}
+  .sibox h2{font-size:2rem;font-weight:900;margin-bottom:28px}
+  .sinput{width:100%;padding:16px 14px;background:#333;border:none;border-radius:4px;color:#fff;font-size:.95rem;margin-bottom:14px;outline:none;font-family:inherit;transition:background .2s;display:block}
+  .sinput:focus{background:#454545}
+  .sibtn{width:100%;padding:16px;background:var(--red);border:none;border-radius:4px;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .2s}
+  .sibtn:hover{background:#f6121d}
+  .sifoot{text-align:center;margin-top:18px;color:#777;font-size:.85rem}
+  .sifoot a{color:#ddd;text-decoration:none}
+  .siclose{position:absolute;top:16px;right:20px;background:none;border:none;color:#888;font-size:1.5rem;cursor:pointer}
+
+  @keyframes fi{from{opacity:0}to{opacity:1}}
+
+  @media(max-width:768px){
+    nav{padding:14px 18px}
+    .nav-links{display:none}
+    .hero{height:80vh;padding-bottom:60px}
+    .hero-content,.section,.promo,footer{padding-left:18px;padding-right:18px}
+    .hero h1{font-size:2rem}
+    .promo{flex-direction:column;text-align:center}
+    .sibox{padding:40px 26px}
+  }
+</style>
+</head>
+<body>
+
+<!-- Live Server warning -->
+<div id="ls-warning">
+  ⚠️ Images won't load when opened as a file. Please use <strong>Live Server</strong> in VS Code: Right-click the file → <strong>"Open with Live Server"</strong>
+  <span style="margin-left:16px;opacity:.8;cursor:pointer" onclick="document.getElementById('ls-warning').style.display='none'">✕ Dismiss</span>
+</div>
+
+<!-- ── NAV ── -->
+<nav id="nav">
+  <div class="logo">NETFLIX</div>
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#">TV Shows</a></li>
+    <li><a href="#">Movies</a></li>
+    <li><a href="#">New &amp; Popular</a></li>
+    <li><a href="#">My List</a></li>
+    <li><a href="#">Browse by Language</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="icon-btn">🔍</button>
+    <button class="icon-btn">🔔</button>
+    <button class="signin-btn" onclick="openSignin()">Sign In</button>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-bg">
+    <img src="https://image.tmdb.org/t/p/original/rcvMfk7SHSABnFWpSIBqkCuapAX.jpg" alt="Stranger Things" onerror="this.style.opacity='0'">
+  </div>
+  <div class="hero-grad"></div>
+  <div class="hero-content">
+    <div class="badge">
+      <span class="badge-r">#1</span>
+      <span class="badge-t">In TV Shows Today</span>
+    </div>
+    <h1>Stranger Things</h1>
+    <p>When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one very strange little girl.</p>
+    <div class="hero-btns">
+      <button class="btn-play" onclick="openModal(0)">▶&nbsp; Play</button>
+      <button class="btn-info" onclick="openModal(0)">ℹ&nbsp; More Info</button>
+    </div>
+    <div class="hero-meta">
+      <span class="rating-box">TV-14</span>
+      <span>Sci-Fi · Horror · Drama · 4 Seasons</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTINUE WATCHING ── -->
+<section class="section" style="padding-top:36px">
+  <div class="section-title">Continue Watching <span class="see-all">Explore All ›</span></div>
+  <div class="cwrow" id="cw-row"></div>
+</section>
+
+<!-- ── TOP 10 ── -->
+<section class="section">
+  <div class="section-title">Top 10 in India Today <span class="see-all">Explore All ›</span></div>
+  <div class="t10row" id="top10-row"></div>
+</section>
+
+<!-- ── TRENDING ── -->
+<section class="section">
+  <div class="section-title">Trending Now <span class="see-all">Explore All ›</span></div>
+  <div class="row" id="r-trending"></div>
+</section>
+
+<!-- ── PROMO ── -->
+<div class="promo">
+  <div>
+    <h2>Download Your Shows.<br>Watch Offline.</h2>
+    <p>Save your favourites easily and always have something to watch — even without an internet connection.</p>
+  </div>
+  <div class="promo-icon">📲</div>
+</div>
+
+<!-- ── NEW ON NETFLIX ── -->
+<section class="section" style="padding-top:44px">
+  <div class="section-title">New on Netflix <span class="see-all">Explore All ›</span></div>
+  <div class="row" id="r-new"></div>
+</section>
+
+<!-- ── ACTION ── -->
+<section class="section">
+  <div class="section-title">Action &amp; Adventure <span class="see-all">Explore All ›</span></div>
+  <div class="row" id="r-action"></div>
+</section>
+
+<!-- ── DRAMAS ── -->
+<section class="section">
+  <div class="section-title">Award-Winning Dramas <span class="see-all">Explore All ›</span></div>
+  <div class="row" id="r-drama"></div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p class="fphone">Questions? Call 000-800-919-1694</p>
+  <div class="flinks">
+    <a href="#">FAQ</a><a href="#">Help Center</a><a href="#">Account</a>
+    <a href="#">Media Center</a><a href="#">Investor Relations</a><a href="#">Jobs</a>
+    <a href="#">Ways to Watch</a><a href="#">Terms of Use</a><a href="#">Privacy</a>
+    <a href="#">Cookie Preferences</a><a href="#">Corporate Information</a><a href="#">Contact Us</a>
+    <a href="#">Speed Test</a><a href="#">Legal Notices</a><a href="#">Only on Netflix</a>
+  </div>
+  <select class="flang">
+    <option>🌐 English</option>
+    <option>हिन्दी</option>
+    <option>தமிழ்</option>
+  </select>
+  <div class="fcopy">© Netflix India</div>
+</footer>
+
+<!-- ── MODAL ── -->
+<div class="mbg" id="modal" onclick="closeMbg(event)">
+  <div class="mbox">
+    <div class="mart">
+      <img id="modal-img" src="" alt="">
+      <div class="mart-grad"></div>
+      <div class="mart-btns">
+        <button class="btn-play" style="font-size:.88rem;padding:9px 24px">▶ Play</button>
+        <button class="btn-info" style="font-size:.88rem;padding:9px 22px">+ My List</button>
+      </div>
+      <button class="mclose" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="mtitle" id="modal-title"></div>
+      <div class="mmeta">
+        <span class="mmatch" id="modal-match"></span>
+        <span class="myear" id="modal-year"></span>
+        <span class="mhd">HD</span>
+        <span class="mdur" id="modal-dur"></span>
+      </div>
+      <p class="mdesc" id="modal-desc"></p>
+      <div class="mchips" id="modal-chips"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SIGN IN ── -->
+<div class="sibg" id="signin">
+  <div class="sibox">
+    <button class="siclose" onclick="closeSignin()">✕</button>
+    <h2>Sign In</h2>
+    <input class="sinput" type="text" placeholder="Email or phone number">
+    <input class="sinput" type="password" placeholder="Password">
+    <button class="sibtn">Sign In</button>
+    <div class="sifoot">
+      New to Netflix? <a href="#">Sign up now.</a><br><br>
+      <a href="#">Forgot password?</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Show Live Server warning if opened as file://
+  if(location.protocol === 'file:'){
+    document.getElementById('ls-warning').style.display = 'block';
+  }
+
+  // ── Scroll nav
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('solid', scrollY > 50);
+  });
+
+  // ── Data — real TMDB backdrop + poster paths
+  const TMDB = 'https://image.tmdb.org/t/p/';
+
+  const shows = [
+    {
+      title: "Stranger Things",
+      backdrop: TMDB + "w780/rcvMfk7SHSABnFWpSIBqkCuapAX.jpg",
+      poster:   TMDB + "w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+      match: 97, year: 2016, dur: "4 Seasons",
+      genres: ["Sci-Fi","Horror","Drama"],
+      desc: "When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one very strange little girl.",
+      progress: 35
+    },
+    {
+      title: "Wednesday",
+      backdrop: TMDB + "w780/iHSwvRVsRyxpX7FE7GbviaDvgGZ.jpg",
+      poster:   TMDB + "w500/9PFonBhy4cQy7hjTLZQ4tCP8sMc.jpg",
+      match: 95, year: 2022, dur: "2 Seasons",
+      genres: ["Comedy","Horror","Mystery"],
+      desc: "Follows Wednesday Addams' years as a student at Nevermore Academy, where she attempts to master her emerging psychic ability, thwart a monstrous killing spree that has terrorised the local town, and solve the murder mystery that embroiled her parents.",
+      progress: 62
+    },
+    {
+      title: "Squid Game",
+      backdrop: TMDB + "w780/qw3J9cNeLioOLoR68WX7z79aCdK.jpg",
+      poster:   TMDB + "w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
+      match: 96, year: 2021, dur: "2 Seasons",
+      genres: ["Thriller","Drama","Action"],
+      desc: "Hundreds of cash-strapped players accept a strange invitation to compete in children's games. Inside, a tempting prize awaits — with deadly high stakes.",
+      progress: 78
+    },
+    {
+      title: "Money Heist",
+      backdrop: TMDB + "w780/uBRpPFcYAYLM75zSnSZS2FIVBbJ.jpg",
+      poster:   TMDB + "w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
+      match: 98, year: 2017, dur: "5 Seasons",
+      genres: ["Crime","Thriller","Action"],
+      desc: "Eight thieves take hostages and lock themselves in the Royal Mint of Spain as a criminal mastermind manipulates the police to carry out his plan.",
+      progress: 20
+    },
+    {
+      title: "Ozark",
+      backdrop: TMDB + "w780/mAlLEUqlNjq0S3C5HXJT3f3VvxS.jpg",
+      poster:   TMDB + "w500/pCGyPVrI9Fzc5bMKBBsP3DZCNon.jpg",
+      match: 94, year: 2017, dur: "4 Seasons",
+      genres: ["Drama","Crime","Thriller"],
+      desc: "A financial adviser drags his family from Chicago to the Missouri Ozarks, where he must launder money to appease a drug boss.",
+      progress: 50
+    },
+    {
+      title: "Dark",
+      backdrop: TMDB + "w780/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
+      poster:   TMDB + "w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
+      match: 97, year: 2017, dur: "3 Seasons",
+      genres: ["Sci-Fi","Thriller","Mystery"],
+      desc: "A family saga with a supernatural twist, set in a German town, where the disappearance of two young children exposes the relationships among four families.",
+      progress: 45
+    },
+    {
+      title: "The Witcher",
+      backdrop: TMDB + "w780/jBJWaqoSCiARWtfV0GlqHrcdidd.jpg",
+      poster:   TMDB + "w500/cZ0d3rtvXPVQ3N7muMNDL9GXKUH.jpg",
+      match: 90, year: 2019, dur: "3 Seasons",
+      genres: ["Fantasy","Action","Adventure"],
+      desc: "Geralt of Rivia, a solitary monster hunter, struggles to find his place in a world where people often prove more wicked than beasts.",
+      progress: 33
+    },
+    {
+      title: "Peaky Blinders",
+      backdrop: TMDB + "w780/wiE9doxiLwq3WgJNSJTlatjSc78.jpg",
+      poster:   TMDB + "w500/vUUqzWa2LnHIVqkaKVlVGkPmerC.jpg",
+      match: 99, year: 2013, dur: "6 Seasons",
+      genres: ["Crime","Drama","History"],
+      desc: "A gangster family epic set in 1900s England, centering on a gang who sew razor blades in the peaks of their caps, and their fierce boss Tommy Shelby.",
+      progress: 10
+    },
+    {
+      title: "Breaking Bad",
+      backdrop: TMDB + "w780/eSzpy96DwBujGFj0xMbXBcGcfxX.jpg",
+      poster:   TMDB + "w500/3xnWaLQjelJDDF7LT1WBo6f4BRe.jpg",
+      match: 99, year: 2008, dur: "5 Seasons",
+      genres: ["Drama","Crime","Thriller"],
+      desc: "A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine with a former student.",
+      progress: 88
+    },
+    {
+      title: "Narcos",
+      backdrop: TMDB + "w780/Khn7apRrMj0pIwkBHAbNhukfvIq.jpg",
+      poster:   TMDB + "w500/rTmal9fDbwh5F0waol2hq35U4ah.jpg",
+      match: 95, year: 2015, dur: "3 Seasons",
+      genres: ["Crime","Biography","Drama"],
+      desc: "A chronicled look at the criminal exploits of Colombian drug lord Pablo Escobar, as well as the many other drug kingpins who plagued the country through the years.",
+      progress: 55
+    },
+    {
+      title: "Black Mirror",
+      backdrop: TMDB + "w780/xmFAuADXqGFbVdGzAQPD0HXQJF3.jpg",
+      poster:   TMDB + "w500/7PRddO7z7mcPi21nZTCMGShAyy1.jpg",
+      match: 92, year: 2011, dur: "6 Seasons",
+      genres: ["Sci-Fi","Drama","Thriller"],
+      desc: "An anthology series exploring a twisted, high-tech multiverse where humanity's greatest innovations and darkest instincts collide.",
+      progress: 15
+    },
+    {
+      title: "Mindhunter",
+      backdrop: TMDB + "w780/z0DaFNhIbvj8vfXjBBWqYBF7jf3.jpg",
+      poster:   TMDB + "w500/eyVJjPBfpwlLx4QBUSiBRO0oNLU.jpg",
+      match: 94, year: 2017, dur: "2 Seasons",
+      genres: ["Crime","Drama","Thriller"],
+      desc: "In the late 1970s two FBI agents expand criminal science by delving into the psychology of murder and getting unnerving access to the country's most notorious killers.",
+      progress: 70
+    },
+  ];
+
+  // ── Build continue watching
+  const cwRow = document.getElementById('cw-row');
+  shows.slice(0, 5).forEach((s, i) => {
+    cwRow.innerHTML += `
+      <div class="cwcard" onclick="openModal(${i})">
+        <div class="cwwrap">
+          <img class="cwimg" src="${s.backdrop}" alt="${s.title}" onerror="this.src='';this.style.background='#1e1e1e'">
+          <div class="cwplay-overlay">▶</div>
+        </div>
+        <div class="cwinfo">
+          <div class="cwtitle">${s.title}</div>
+          <div class="cwep">${s.dur.includes('Season') ? 'S1:E1' : 'Episode 1'} · ${Math.floor(Math.random()*40+20)}m remaining</div>
+          <div class="pbar"><div class="pfill" style="width:${s.progress}%"></div></div>
+        </div>
+      </div>`;
+  });
+
+  // ── Build top 10
+  const t10Row = document.getElementById('top10-row');
+  shows.slice(0, 8).forEach((s, i) => {
+    t10Row.innerHTML += `
+      <div class="t10item" onclick="openModal(${i})">
+        <div class="t10num">${i+1}</div>
+        <img class="t10img" src="${s.poster}" alt="${s.title}" onerror="this.src='';this.style.background='#1e1e1e'">
+      </div>`;
+  });
+
+  // ── Build standard card
+  function makeCard(s, i) {
+    return `<div class="card" onclick="openModal(${i})">
+      <img class="card-img" src="${s.backdrop}" alt="${s.title}" onerror="this.classList.add('err')">
+      <div class="card-overlay">
+        <div class="card-actions">
+          <button class="cb play">▶</button>
+          <button class="cb">+</button>
+          <button class="cb">👍</button>
+          <button class="cb more">⌄</button>
+        </div>
+        <div class="card-name">${s.title}</div>
+        <div class="card-info">
+          <span class="pct">${s.match}% Match</span>
+          <span>${s.year}</span>
+        </div>
+        <div class="card-genres">${s.genres.map(g=>`<span class="gdot">${g}</span>`).join('')}</div>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('r-trending').innerHTML = shows.map((s,i) => makeCard(s,i)).join('');
+  document.getElementById('r-new').innerHTML      = [...shows].reverse().map((s,i) => makeCard(s, shows.length-1-i)).join('');
+  document.getElementById('r-action').innerHTML   = shows.slice(2).concat(shows.slice(0,2)).map((s,i) => makeCard(s,(i+2)%shows.length)).join('');
+  document.getElementById('r-drama').innerHTML    = shows.slice(4).concat(shows.slice(0,4)).map((s,i) => makeCard(s,(i+4)%shows.length)).join('');
+
+  // ── Modal
+  function openModal(idx) {
+    const s = shows[idx] || shows[0];
+    document.getElementById('modal-img').src   = s.backdrop;
+    document.getElementById('modal-title').textContent = s.title;
+    document.getElementById('modal-match').textContent = s.match + '% Match';
+    document.getElementById('modal-year').textContent  = s.year;
+    document.getElementById('modal-dur').textContent   = s.dur;
+    document.getElementById('modal-desc').textContent  = s.desc;
+    document.getElementById('modal-chips').innerHTML   = s.genres.map(g=>`<span class="chip">${g}</span>`).join('');
+    document.getElementById('modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeMbg(e) { if(e.target === document.getElementById('modal')) closeModal(); }
+
+  // ── Sign In
+  function openSignin()  { document.getElementById('signin').classList.add('open');    document.body.style.overflow = 'hidden'; }
+  function closeSignin() { document.getElementById('signin').classList.remove('open'); document.body.style.overflow = ''; }
+
+  // ── Keyboard
+  document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeModal(); closeSignin(); } });
+</script>
+</body>
+</html>
